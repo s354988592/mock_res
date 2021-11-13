@@ -1,7 +1,7 @@
 <!--
  * @Author: your name
  * @Date: 2021-11-04 17:03:41
- * @LastEditTime: 2021-11-05 12:25:27
+ * @LastEditTime: 2021-11-13 19:08:00
  * @LastEditors: Please set LastEditors
  * @Description: In User Settings Edit
  * @FilePath: /undefined/Users/shangweitao/Desktop/resSearch.html
@@ -13,7 +13,7 @@
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
 	<meta name="viewport"
 		content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0,viewport-fit=cover">
-  <title>检查报告详情</title>
+  <title>检查报告查询</title>
   <script src="https://cdn.jsdelivr.net/npm/vue@2"></script>
   <link
     rel="stylesheet"
@@ -50,6 +50,12 @@
     a {color: #25a4bb;text-decoration: none;}
 </style>
   <style>
+    body{
+      height: 100%;
+    }
+    #app{
+      height: 100%;
+    }
     .me_table, .res_table{
       width: 100%;
       border-color: #000;
@@ -78,47 +84,92 @@
     .t_header .l_2{
       width: 10%;
     }
+    .search_form{
+      width: 100%;
+      height: 100%;
+      position: relative;
+    }
+    .form_s{
+      width: 100%;
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%,-50%);
+    }
+    .bbtn{
+      background-color: rgb(0, 116, 226);
+      border-color: rgb(0, 116, 226);
+    }
+    .van-field__label{
+      width: 1rem;
+    }
   </style>
 </head>
 <body>
   <div id="app">
-    <table class="me_table" border="1" cellpadding="0" cellspacing="0">
-      <tr>
-        <td class="l">姓名</td>
-        <td>{{messageData.name}}</td>
-      </tr>
-      <tr>
-        <td class="l">证件号</td>
-        <td>{{messageData.id}}</td>
-      </tr>
-      <tr>
-        <td class="l">检测时间</td>
-        <td>{{messageData.time}}</td>
-      </tr>
-    </table>
-    <table class="res_table" border="1" cellpadding="0" cellspacing="0">
-      <tr class="t_header">
-        <td class="l_1">项目名称</td>
-        <td class="l_2">缩写</td>
-        <td>结果</td>
-        <td>单位</td>
-        <td>参考范围</td>
-      </tr>
-      <tr class="t_res">
-        <td>{{messageData.cnName}}</td>
-        <td></td>
-        <td>{{messageData.cnRes}}</td>
-        <td></td>
-        <td>{{messageData.cnRes}}</td>
-      </tr>
-      <tr class="t_res">
-        <td>{{messageData.enName}}</td>
-        <td></td>
-        <td>{{messageData.enRes}}</td>
-        <td></td>
-        <td>{{messageData.enRes}}</td>
-      </tr>
-    </table>
+    <template v-if='serchEd'>
+      <table class="me_table" border="1" cellpadding="0" cellspacing="0">
+        <tr>
+          <td class="l">姓名</td>
+          <td>{{messageData.name}}</td>
+        </tr>
+        <tr>
+          <td class="l">证件号</td>
+          <td>{{messageData.id}}</td>
+        </tr>
+        <tr>
+          <td class="l">检测时间</td>
+          <td>{{messageData.time}}</td>
+        </tr>
+      </table>
+      <table class="res_table" border="1" cellpadding="0" cellspacing="0">
+        <tr class="t_header">
+          <td class="l_1">项目名称</td>
+          <td class="l_2">缩写</td>
+          <td>结果</td>
+          <td>单位</td>
+          <td>参考范围</td>
+        </tr>
+        <tr class="t_res">
+          <td>{{messageData.cnName}}</td>
+          <td></td>
+          <td>{{messageData.cnRes}}</td>
+          <td></td>
+          <td>{{messageData.cnRes}}</td>
+        </tr>
+        <tr class="t_res">
+          <td>{{messageData.enName}}</td>
+          <td></td>
+          <td>{{messageData.enRes}}</td>
+          <td></td>
+          <td>{{messageData.enRes}}</td>
+        </tr>
+      </table>
+    </template>
+    <template v-else>
+      <div class="search_form">
+        <van-form @submit='handleSubmit' class="form_s">
+          <van-field
+            v-model="messageData.name"
+            name="姓名"
+            label="姓名:"
+            placeholder="请输入姓名"
+          >
+          </van-field>
+          <van-field
+            v-model="messageData.id"
+            name="证件号"
+            label="证件号:"
+            placeholder="请输入证件号"
+          >
+          </van-field>
+          <div style="margin: 60px;">
+            <van-button class="bbtn" round block type="info" native-type="submit">立即查询</van-button>
+          </div>
+        </van-form>
+      </div>
+    </template>
+    
   </div>
   <script>
 		(function (doc, win) {
@@ -141,10 +192,10 @@
   var app = new Vue({
     el: '#app',
     data: {
-      message: 'Hello Vue!',
+      serchEd: false,
       messageData: {
-        name: '尚伟涛',
-        id: '412723199206232117',
+        name: '',
+        id: '',
         time: '',
         cnName: '新型冠状病毒核酸检测',
         enName: '2019-nCoV Nucleic Acid Test',
@@ -182,17 +233,46 @@
             vant.Toast.clear();
           }
         }, 1000);
+      },
+      handleSubmit(){
+        if(!this.messageData.name){
+          vant.Toast('请输入姓名！')
+          return
+        }
+        if(!this.messageData.id){
+          vant.Toast('请输入证件号码！')
+          return
+        }
+        this.mySetTime()
+        let userInfo = JSON.stringify(this.messageData)
+        localStorage.setItem('userInfo',userInfo)
+        this.serchEd = true
+        this.loadingT()
+        
+      },
+      mySetTime(){
+        let time = new Date().getTime() - (1000 * 60 * 60 * 20)
+        this.messageData.time = this.timeStamp2String(time)
+      },
+      judageStatus(){
+        let saveUser = localStorage.getItem('userInfo')
+        if(saveUser) {
+          this.messageData = JSON.parse(saveUser)
+          this.mySetTime()
+          this.serchEd = true
+          this.loadingT()
+        }
       }
     },
     created() {
-      let time = new Date().getTime() - (1000 * 60 * 60 * 20)
-      this.messageData.time = this.timeStamp2String(time)
+      
     },
     mounted() {
-      this.loadingT()
+      this.judageStatus()
     },
   })
   Vue.use(vant.Lazyload);
+  Vue.use(vant.Form);
 </script>
 </html>
 <script>
